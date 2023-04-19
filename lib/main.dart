@@ -69,7 +69,9 @@ class HomePage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   String savePath = await getFilePath(fileType, fileName);
-                  onTap(context, filePath, savePath);
+                  if (context.mounted) {
+                    onTap(context, filePath, savePath);
+                  }
                 },
                 child: Text(fileName),
               ),
@@ -81,7 +83,7 @@ class HomePage extends StatelessWidget {
   Future onTap(BuildContext context, String downloadUrl, String downloadPath) async {
     bool isGranted = await PermissionUtil.check();
 
-    if (isGranted) {
+    if (isGranted && context.mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (ctx) {
           return PowerFileViewPage(
