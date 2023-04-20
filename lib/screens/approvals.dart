@@ -1,14 +1,18 @@
-import 'dart:convert';
-
-import 'package:aiya/permission_util.dart';
-// import 'package:aiya/screens/viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:aiya/utils.dart';
+import 'package:aiya/providers/android_intent.dart';
 
-const files = [
-  "https://www.xiangmin.net/downloads/test.pdf",
-];
+// const List<String> files = [
+//   "https://www.xiangmin.net/downloads/test.pdf",
+//   "https://www.xiangmin.net/downloads/test.docx",
+//   "https://www.xiangmin.net/downloads/test.doc",
+//   "https://www.xiangmin.net/downloads/test.xlsx",
+//   "https://www.xiangmin.net/downloads/test.xls",
+//   "https://www.xiangmin.net/downloads/test.pptx",
+//   "https://www.xiangmin.net/downloads/test.ppt",
+//   "https://www.xiangmin.net/downloads/test.txt",
+// ];
 
 class Approvals extends HookConsumerWidget {
   const Approvals({super.key});
@@ -16,37 +20,37 @@ class Approvals extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(androidIntentControllerProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('文件列表'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, 'viewer');
-        },
+      body: Center(
+        child: Container(
+          margin: const EdgeInsets.only(top: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Text(controller.realPath ?? "无输入"),
+        ),
       ),
+      floatingActionButton: FloatingActionButton(onPressed: () {
+        onTap(context, controller.realPath);
+      }),
     );
   }
-}
 
-Future onTap(BuildContext context, String downloadUrl, String downloadPath) async {
-  bool isGranted = await PermissionUtil.check();
-  if (isGranted) {
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(builder: (ctx) {
-    //     return PowerFileViewPage(
-    //       downloadUrl: downloadUrl,
-    //       downloadPath: downloadPath,
-    //     );
-    //   }),
-    // );
-  } else {
-    debugPrint('no permission');
+  Future onTap(BuildContext context, String? realPath) async {
+    if (realPath == null) {
+      return;
+    }
+
+    bool isGranted = await PermissionUtil.check();
+
+    if (isGranted && context.mounted) {
+      Navigator.pushNamed(context, 'viewer');
+    } else {
+      debugPrint('no permission');
+    }
   }
-}
-
-Future getFilePath(String type, String assetPath) async {
-  final directory = await getTemporaryDirectory();
-  return "${directory.path}/fileview/${base64.encode(utf8.encode(assetPath))}.$type";
 }
