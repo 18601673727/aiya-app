@@ -1,0 +1,218 @@
+// import 'dart:async';
+// import 'dart:convert';
+// import 'permission_util.dart';
+
+import 'package:fl_shared_link/fl_shared_link.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:logger/logger.dart';
+import 'package:power_file_view/power_file_view.dart';
+// import 'package:flutter_hooks/flutter_hooks.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:aiya/power_file_view_page.dart';
+
+var logger = Logger(
+  printer: PrettyPrinter(),
+);
+
+bool get _isAndroid => defaultTargetPlatform == TargetPlatform.android;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  PowerFileViewManager.initLogEnable(true, true);
+  PowerFileViewManager.initEngine();
+  runApp(
+    const ProviderScope(child: MyApp()),
+  );
+}
+
+class MyApp extends HookConsumerWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(title: const Text('FlSharedLink Plugin')),
+        body: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(20),
+          child: const SingleChildScrollView(child: HomePage()),
+        ),
+      ),
+    );
+  }
+}
+
+// class IntentHandlerPage extends HookConsumerWidget {
+//   const IntentHandlerPage(this.id, {super.key});
+
+//   final String id;
+
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     logger.d('收到分享！文件id是：$id');
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('接收到外部应用的分享'),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Center(
+//           child: Text(id),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+const List<String> files = [
+  "https://www.xiangmin.net/downloads/test.pdf",
+  "https://www.xiangmin.net/downloads/test.docx",
+  "https://www.xiangmin.net/downloads/test.doc",
+  "https://www.xiangmin.net/downloads/test.xlsx",
+  "https://www.xiangmin.net/downloads/test.xls",
+  "https://www.xiangmin.net/downloads/test.pptx",
+  "https://www.xiangmin.net/downloads/test.ppt",
+  "https://www.xiangmin.net/downloads/test.txt",
+];
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+// @override
+// Widget build(BuildContext context, WidgetRef ref) {
+//   return Scaffold(
+//     backgroundColor: Colors.white,
+//     appBar: AppBar(
+//       title: const Text('文件列表'),
+//     ),
+//     body: ListView.builder(
+//         itemCount: files.length,
+//         itemBuilder: (context, index) {
+//           String filePath = files[index];
+//           final fileName = FileUtil.getFileName(filePath);
+//           final fileType = FileUtil.getFileType(filePath);
+//           return Container(
+//             margin: const EdgeInsets.only(top: 10.0),
+//             padding: const EdgeInsets.symmetric(horizontal: 15.0),
+//             child: ElevatedButton(
+//               onPressed: () async {
+//                 String savePath = await getFilePath(fileType, fileName);
+//                 if (context.mounted) {
+//                   onTap(context, filePath, savePath);
+//                 }
+//               },
+//               child: Text(fileName),
+//             ),
+//           );
+//         }),
+//   );
+// }
+
+// Future onTap(BuildContext context, String downloadUrl, String downloadPath) async {
+//   bool isGranted = await PermissionUtil.check();
+
+//   if (isGranted && context.mounted) {
+//     Navigator.of(context).push(
+//       MaterialPageRoute(builder: (ctx) {
+//         return PowerFileViewPage(
+//           downloadUrl: downloadUrl,
+//           downloadPath: downloadPath,
+//         );
+//       }),
+//     );
+//   } else {
+//     debugPrint('no permission');
+//   }
+// }
+
+// Future getFilePath(String type, String assetPath) async {
+//   final directory = await getTemporaryDirectory();
+//   return "${directory.path}/fileview/${base64.encode(utf8.encode(assetPath))}.$type";
+// }
+// }
+
+class _HomePageState extends State<HomePage> {
+  AndroidIntentModel? intent;
+  ValueNotifier<String?> realPath = ValueNotifier('');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_isAndroid) intent = await FlSharedLink().intentWithAndroid;
+      setState(() {});
+      FlSharedLink().receiveHandler(
+        onIntent: (AndroidIntentModel? data) {
+          intent = data;
+          setState(() {});
+        },
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> children = [];
+    if (_isAndroid) children = androidChildren;
+    return Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center, children: children);
+  }
+
+  List<Widget> get androidChildren => [
+        const Text('Android Intent'),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.all(12),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.withOpacity(0.3),
+          ),
+          child: Text('${intent?.toMap()}'),
+        ),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: getRealFilePathWithAndroid,
+          child: const Text('Android uri转真实文件地址 兼容微信QQ'),
+        ),
+        const SizedBox(height: 10),
+        ValueListenableBuilder(
+          valueListenable: realPath,
+          builder: (_, String? value, __) => Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.grey.withOpacity(0.3),
+            ),
+            child: Text(
+              value.toString(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 30),
+      ];
+
+  void getRealFilePathWithAndroid() async {
+    final id = intent?.id;
+    if (id == null) return;
+    realPath.value = await FlSharedLink().getRealFilePathWithAndroid(id);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    realPath.dispose();
+  }
+}
