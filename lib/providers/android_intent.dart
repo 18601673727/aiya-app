@@ -12,9 +12,16 @@ class AndroidIntentController extends ChangeNotifier {
 
       if (id != null) {
         intent = data;
-        realPath = await FlSharedLink().getRealFilePathWithAndroid(id);
         notifyListeners();
       }
+    }
+  }
+
+  Future<void> resolvePath() async {
+    final id = intent?.id;
+    if (id != null) {
+      realPath = await FlSharedLink().getRealFilePathWithAndroid(id);
+      notifyListeners();
     }
   }
 }

@@ -19,7 +19,8 @@ Future<void> main() async {
 
   // 冷启动时把intent写入
   final intent = await FlSharedLink().intentWithAndroid;
-  container.read(androidIntentControllerProvider).intent = intent;
+  await container.read(androidIntentControllerProvider).update(intent);
+  await container.read(androidIntentControllerProvider).resolvePath();
 
   runApp(UncontrolledProviderScope(
     container: container,
@@ -33,11 +34,13 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 注册intent相关的热处理事件
-    FlSharedLink().receiveHandler(onIntent: (AndroidIntentModel? data) {
+    FlSharedLink().receiveHandler(onIntent: (AndroidIntentModel? intent) async {
       logger.i("接收到来自其他应用的intent!");
-      ref.read(androidIntentControllerProvider).update(data);
+      await ref.read(androidIntentControllerProvider).update(intent);
+      await ref.read(androidIntentControllerProvider).resolvePath();
     });
 
+    // TODO: 通过学习AuthProvider来控制冷启动时的有intent跳转
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
