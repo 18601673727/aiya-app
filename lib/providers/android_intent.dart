@@ -24,6 +24,12 @@ class AndroidIntentController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void reset() {
+    intent = null;
+    realPath = null;
+    notifyListeners();
+  }
 }
 
 final androidIntentControllerProvider = ChangeNotifierProvider<AndroidIntentController>((ref) {
