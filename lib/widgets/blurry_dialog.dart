@@ -18,7 +18,7 @@ class BlurryDialog extends StatelessWidget {
   final String cancelText;
   final VoidCallback continueCallBack;
   final VoidCallback cancelCallback;
-  final TextStyle textStyle = const TextStyle(color: Colors.black);
+  final TextStyle textStyle = const TextStyle(color: Colors.white);
 
   @override
   Widget build(BuildContext context) {

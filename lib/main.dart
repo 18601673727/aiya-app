@@ -30,6 +30,7 @@ Future<void> main() async {
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
+  static const primaryColor = Color(0xFF44D62C);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,12 +41,25 @@ class MyApp extends ConsumerWidget {
       await ref.read(androidIntentControllerProvider).resolvePath();
     });
 
-    // TODO: 通过学习AuthProvider来控制冷启动时的有intent跳转
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: appRoutes,
       onGenerateRoute: (settings) => appGeneratedRoutes(settings),
+      theme: ThemeData(
+        scaffoldBackgroundColor: Colors.grey[700],
+        brightness: Brightness.dark,
+        primaryColor: primaryColor,
+        textSelectionTheme: const TextSelectionThemeData(cursorColor: primaryColor),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.black87,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.zero,
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
     );
   }
 }
