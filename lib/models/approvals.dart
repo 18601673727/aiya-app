@@ -5,7 +5,7 @@ part 'approvals.freezed.dart';
 part 'approvals.g.dart';
 
 @freezed
-abstract class Approvals with _$Approvals {
+class Approvals with _$Approvals {
   const factory Approvals({
     required List<Approval> approvalList,
   }) = _Approvals;

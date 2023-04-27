@@ -1,4 +1,5 @@
 import 'package:aiya/main.dart';
+import 'package:aiya/providers/auth.dart';
 import 'package:aiya/repositories/approvals.dart';
 import 'package:aiya/widgets/common.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ class Approvals extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(androidIntentControllerProvider);
     final approvalsAsync = ref.watch(fetchApprovalsProvider(pageNumber: 1));
+    final sessionId = ref.watch(sessionIdProvider);
+    final displayName = ref.watch(displayNameProvider);
 
     executeAfterBuild(() {
       // logger.i(controller.realPath);
@@ -73,9 +76,40 @@ class Approvals extends HookConsumerWidget {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(context, 'login');
+                  if (sessionId.isEmpty) {
+                    Navigator.pushNamed(context, 'login');
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        continueCallBack() async {
+                          // 登出逻辑
+                          await ref.read(sessionIdProvider.notifier).update('');
+                          await ref.read(displayNameProvider.notifier).update('');
+                          if (context.mounted) {
+                            Navigator.popAndPushNamed(context, 'login');
+                          }
+                        }
+
+                        cancelCallback() async {
+                          Navigator.of(context).pop();
+                        }
+
+                        BlurryDialog alert = BlurryDialog(
+                          '退出登录',
+                          '取消',
+                          'Aiya App v1.0',
+                          '当前用户: $displayName',
+                          continueCallBack,
+                          cancelCallback,
+                        );
+
+                        return alert;
+                      },
+                    );
+                  }
                 },
-                child: const Text('未登录'),
+                child: sessionId.isEmpty ? const Text('未登录') : Text(displayName),
               ),
             ),
           ),

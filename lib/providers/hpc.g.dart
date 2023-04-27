@@ -1,23 +1,23 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'dio.dart';
+part of 'hpc.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dioHash() => r'd2bc04aa9dd62cfc947ecf0192457de12a39e893';
+String _$hpcHash() => r'47ea57be303ac1fcdd3dc138a80d0af60aca034d';
 
-/// See also [dio].
-@ProviderFor(dio)
-final dioProvider = AutoDisposeProvider<Dio>.internal(
-  dio,
-  name: r'dioProvider',
+/// See also [hpc].
+@ProviderFor(hpc)
+final hpcProvider = AutoDisposeProvider<HttpPlusClient>.internal(
+  hpc,
+  name: r'hpcProvider',
   debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$dioHash,
+      const bool.fromEnvironment('dart.vm.product') ? null : _$hpcHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef DioRef = AutoDisposeProviderRef<Dio>;
+typedef HpcRef = AutoDisposeProviderRef<HttpPlusClient>;
 // ignore_for_file: unnecessary_raw_strings, subtype_of_sealed_class, invalid_use_of_internal_member, do_not_use_environment, prefer_const_constructors, public_member_api_docs, avoid_private_typedef_functions
