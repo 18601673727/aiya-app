@@ -7,6 +7,12 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 
+        Requeseted by java.lang.SecurityException: com.aiyainfo.app was not granted  this permission: android.permission.WRITE_SETTINGS.
+        Seems like this is an Error from TBS
+    -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
     <application android:name="${applicationName}" android:icon="@mipmap/launcher_icon" android:label="Aiya" android:networkSecurityConfig="@xml/network_config" android:requestLegacyExternalStorage="true">
         <activity android:name=".MainActivity" android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode" android:exported="true" android:hardwareAccelerated="true" android:launchMode="singleTop" android:theme="@style/LaunchTheme" android:windowSoftInputMode="adjustResize">
             <meta-data android:name="io.flutter.embedding.android.NormalTheme" android:resource="@style/NormalTheme" />
