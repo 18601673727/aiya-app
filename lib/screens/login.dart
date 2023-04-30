@@ -1,3 +1,4 @@
+import 'package:aiya/endpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -166,30 +167,7 @@ class Login extends HookConsumerWidget {
                   onPressed: () async {
                     if (!fieldsEmptyState.value) {
                       // 提交表单
-                      // logger.i(usernameController.text); // admin
-                      // logger.i(passwordController.text); // TrustView_123
-                      const payload = '''
-<?xml version="1.0" encoding="UTF-8"?>
-<TrustView>
-    <Envelope>
-        <EnvelopeHeader UserID="" ServerTime="" ServerTimeOffset="" SessionID="" ClientTime="2023/04/21 15:35:39" Version="2.0.22.1216"/>
-        <EnvelopeBody>
-            <Job Origin="" Destination="" RequestID="" Target="tw.com.trustview.tvsystem.trustserver.service.TVAuthenticationService">
-                <JobDetail JobDetailID="">
-                    <Action>Authenticate</Action>
-                    <PropertyObject ClassName="tw.com.trustview.tvsystem.vo.TVAuthenticationVO">
-                        <PropertyObject ClassName="java.lang.String_ARRAY" ObjectName="authInfo">
-                            <PropertyObject ClassName="java.lang.String" Value="admin"/>
-                            <PropertyObject ClassName="java.lang.String" Value="TrustView_123"/></PropertyObject>
-                        <PropertyObject ClassName="int" ObjectName="clientType" Value="11"/>
-                        <PropertyObject ClassName="java.lang.String" ObjectName="moduleName" Value="TVDbSam"/>
-                        <PropertyObject ClassName="java.lang.String" ObjectName="macAddress" Value="B4%2DA9%2DFC%2D21%2D49%2D92"/></PropertyObject>
-                </JobDetail>
-            </Job>
-        </EnvelopeBody>
-    </Envelope>
-</TrustView>
-                      ''';
+                      final payload = loginPayload('wxm', '1234.Com'); // usernameController.text, passwordController.text
                       final url = Uri.https('drm.aiyainfo.com:9443', '/tvud/rd');
                       final body = {'xmlDoc': payload};
                       final response = await hpc.post(url, body: body);
