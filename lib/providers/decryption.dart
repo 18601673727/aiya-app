@@ -176,8 +176,9 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
 
     // 配合上面的ceil来为block填充差(padding)
     if (blockData.length < blockSize) {
-      logger.i('padded: ${blockSize - blockData.length}!');
-      blockData.insertAll(blockData.length, List.filled(blockSize - blockData.length, blockSize - blockData.length));
+      final padSize = blockSize - blockData.length;
+      logger.i('padded: $padSize!');
+      blockData.insertAll(blockData.length, List.filled(padSize, padSize));
     }
 
     decryptedFileBody.addAll(bodyDecryptor.run(Uint8List.fromList(blockData.toList())).toList());
@@ -193,22 +194,18 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
   // logger.i('gbk: $result2');
 
   // 文件体写入临时目录，完成解密流程
+  Directory tempDir = await getTemporaryDirectory();
   List<String> extensionList = [];
   String extensionName = "";
 
   for (var i = realPath.length - 1; i > -1; i--) {
-    if (realPath[i] != '.') {
-      extensionList.add(realPath[i]);
-    } else {
-      break;
-    }
+    if (realPath[i] == '.') break;
+    extensionList.add(realPath[i]);
   }
 
   extensionName = extensionList.reversed.join();
 
-  Directory tempDir = await getTemporaryDirectory();
-  String tempPath = tempDir.path;
-  var filePath = '$tempPath/${uuid.v1()}.$extensionName';
+  final filePath = '${tempDir.path}/${uuid.v1()}.$extensionName';
 
   logger.i(realPath);
   logger.i(filePath);
