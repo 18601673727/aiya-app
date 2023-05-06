@@ -7,8 +7,8 @@ final sessionIdProvider = createPrefProvider<String>(
   defaultValue: '',
 );
 
-final displayNameProvider = createPrefProvider<String>(
+final accountNameProvider = createPrefProvider<String>(
   prefs: (_) => prefs,
-  prefKey: 'displayName',
+  prefKey: 'accountName',
   defaultValue: '',
 );

@@ -167,7 +167,7 @@ class Login extends HookConsumerWidget {
                   onPressed: () async {
                     if (!fieldsEmptyState.value) {
                       // 提交表单
-                      final payload = loginPayload('wxm', '1234.Com'); // usernameController.text, passwordController.text
+                      final payload = loginPayload('admin', 'TrustView_123'); // usernameController.text, passwordController.text
                       final url = Uri.https('drm.aiyainfo.com:9443', '/tvud/rd');
                       final body = {'xmlDoc': payload};
                       final response = await hpc.post(url, body: body);
@@ -177,31 +177,31 @@ class Login extends HookConsumerWidget {
 
                       final sessionId = document.findAllElements('EnvelopeHeader').first.attributes[3].value;
                       if (context.mounted && sessionId.length != 48) {
-                        logger.e('Session Id Invalid: $sessionId');
+                        logger.e('Expecting Session Id Length to be 48, but got: ${sessionId.length}');
 
                         if (sessionId.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(errorSnackBar('账号密码错误'));
                         }
 
                         ScaffoldMessenger.of(context).showSnackBar(errorSnackBar('服务器没有返回合法的SessionId'));
-                      }
+                      } else {
+                        // 缓存 sessionId, accountName
+                        await ref.read(sessionIdProvider.notifier).update(sessionId);
 
-                      // 缓存 sessionId, displayName
-                      await ref.read(sessionIdProvider.notifier).update(sessionId);
-
-                      for (var element in document.findAllElements('PropertyObject')) {
-                        if (element.attributes[0].value == 'java.lang.String') {
-                          if (element.attributes[1].value == 'displayName') {
-                            await ref.read(displayNameProvider.notifier).update(element.attributes[2].value);
+                        for (var element in document.findAllElements('PropertyObject')) {
+                          if (element.attributes[0].value == 'java.lang.String') {
+                            if (element.attributes[1].value == 'accountName') {
+                              await ref.read(accountNameProvider.notifier).update(element.attributes[2].value);
+                            }
                           }
                         }
-                      }
 
-                      logger.i('Login success, Session Id: ${ref.watch(sessionIdProvider)}, Display Name: ${ref.watch(displayNameProvider)}');
+                        logger.i('Login success, Session Id: ${ref.watch(sessionIdProvider)}, Display Name: ${ref.watch(accountNameProvider)}');
 
-                      // 完成登录，页面跳转返回
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
+                        // 完成登录，页面跳转返回
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(errorSnackBar('请填写所有必填字段'));
