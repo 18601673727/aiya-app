@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:flutter/foundation.dart';
 
 part 'approval.freezed.dart';
-part 'approval.g.dart';
 
 @freezed
 class Approval with _$Approval {
@@ -15,6 +14,4 @@ class Approval with _$Approval {
     required int fileId,
     required int userId,
   }) = _Approval;
-
-  factory Approval.fromJson(Map<String, Object?> json) => _$ApprovalFromJson(json);
 }

@@ -1,6 +1,6 @@
 import 'package:aiya/main.dart';
 import 'package:aiya/providers/auth.dart';
-import 'package:aiya/repositories/approvals.dart';
+import 'package:aiya/repositories/approval.dart';
 import 'package:aiya/widgets/common.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -20,9 +20,9 @@ class Approvals extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(androidIntentControllerProvider);
-    final approvalsAsync = ref.watch(fetchApprovalsProvider(pageNumber: 1));
+    final accountName = ref.watch(accountNameProvider);
     final sessionId = ref.watch(sessionIdProvider);
-    final displayName = ref.watch(displayNameProvider);
+    final approvalsAsync = ref.watch(fetchApprovalProvider);
 
     executeAfterBuild(() {
       // logger.i(controller.realPath);
@@ -85,7 +85,7 @@ class Approvals extends HookConsumerWidget {
                         continueCallBack() async {
                           // 登出逻辑
                           await ref.read(sessionIdProvider.notifier).update('');
-                          await ref.read(displayNameProvider.notifier).update('');
+                          await ref.read(accountNameProvider.notifier).update('');
                           if (context.mounted) {
                             Navigator.popAndPushNamed(context, 'login');
                           }
@@ -99,7 +99,7 @@ class Approvals extends HookConsumerWidget {
                           '退出登录',
                           '取消',
                           'Aiya App v1.0',
-                          '当前用户: $displayName',
+                          '当前用户: $accountName',
                           continueCallBack,
                           cancelCallback,
                         );
@@ -109,7 +109,7 @@ class Approvals extends HookConsumerWidget {
                     );
                   }
                 },
-                child: sessionId.isEmpty ? const Text('未登录') : Text(displayName),
+                child: sessionId.isEmpty ? const Text('未登录') : Text(accountName),
               ),
             ),
           ),
