@@ -18,43 +18,49 @@ class Viewer extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('文件预览'),
-      ),
+      appBar: AppBar(title: const Text('文件预览')),
       body: plainTextAsync.when(
         loading: () => Container(
-          color: Colors.grey[300],
+          color: Colors.grey[800],
           alignment: Alignment.center,
-          child: const Text(
-            '正在解密..',
-            style: TextStyle(color: Colors.lightBlue),
-          ),
+          child: Text('正在解密..', style: TextStyle(color: Theme.of(context).primaryColor)),
         ),
-        error: (error, stack) => Container(
-          color: Colors.grey[300],
-          alignment: Alignment.center,
-          child: const Text(
-            '文件解密失败',
-            style: TextStyle(color: Colors.redAccent),
-          ),
-        ),
-        data: (decryptedPath) => PowerFileViewWidget(
-          filePath: decryptedPath,
-          loadingBuilder: (viewType, progress) {
-            return Container(
-              color: Colors.grey,
-              alignment: Alignment.center,
-              child: Text('加载腾讯组件中: $progress，如果该步骤卡顿太久，请尝试在微信中安装QQ浏览器'),
-            );
-          },
-          errorBuilder: (viewType) {
-            return Container(
-              color: Colors.red,
-              alignment: Alignment.center,
-              child: const Text('出错了，请尝试在微信中安装QQ浏览器后再试'),
-            );
-          },
-        ),
+        error: (error, stack) => const ErrorWidget(),
+        data: (decryptedPath) => decryptedPath.isEmpty
+            ? const ErrorWidget()
+            : PowerFileViewWidget(
+                filePath: decryptedPath,
+                loadingBuilder: (viewType, progress) {
+                  return Container(
+                    color: Colors.grey[800],
+                    alignment: Alignment.center,
+                    child: Text('加载腾讯组件中: $progress，\n如果该步骤卡顿太久，\n请尝试在微信中安装QQ浏览器'),
+                  );
+                },
+                errorBuilder: (viewType) {
+                  return Container(
+                    color: Colors.red,
+                    alignment: Alignment.center,
+                    child: const Text('出错了，\n请尝试在微信中安装QQ浏览器后再试'),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class ErrorWidget extends ConsumerWidget {
+  const ErrorWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      color: Colors.grey[800],
+      alignment: Alignment.center,
+      child: const Text(
+        '文件解密失败',
+        style: TextStyle(color: Colors.red),
       ),
     );
   }

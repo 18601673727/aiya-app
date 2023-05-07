@@ -138,12 +138,10 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
   if (keyHex.isEmpty) {
     logger.e('keyHex is empty, abort decryption!');
     return '';
-  } else {
-    logger.i('Got keyHex: $keyHex');
   }
 
   final bodyKey = decodeKeyHex(keyHex);
-  logger.i('bodyDecryptor Key: $bodyKey');
+  logger.i('Got keyHex: $keyHex\nBody Decryptor Key: $bodyKey');
 
   // 解密文件体
   final fileBodyStartAt = tvSize + 36 + 5216;
@@ -165,9 +163,8 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
 
   // 分批运行AES解密
   while (batchTotal > batchCurrent) {
-    List<int> temp = List.empty(growable: true);
-    temp.insertAll(0, encryptedFileBody.skip(batchCurrent * batchSize).take(batchSize));
-    decryptedFileBody.addAll(await bodyDecryptor.decrypt(Uint8List.fromList(temp)));
+    final batchData = Uint8List.fromList(encryptedFileBody.skip(batchCurrent * batchSize).take(batchSize).toList());
+    decryptedFileBody.addAll(await bodyDecryptor.decrypt(batchData));
     batchCurrent++;
   }
 
