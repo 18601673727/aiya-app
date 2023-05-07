@@ -1,22 +1,21 @@
+import 'dart:convert';
 import 'dart:io';
 
-// import 'package:fast_gbk/fast_gbk.dart';
-import 'package:aiya/decryptor.dart';
-import 'package:aiya/endpoints.dart';
-import 'package:aiya/providers/auth.dart';
-import 'package:aiya/providers/hpc.dart';
+import 'package:xml/xml.dart';
+import 'package:encryptions/encryptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:aiya/main.dart';
-import 'package:xml/xml.dart';
+import 'package:aiya/utils.dart';
+import 'package:aiya/endpoints.dart';
+import 'package:aiya/providers/auth.dart';
+import 'package:aiya/providers/hpc.dart';
 
 part 'decryption.g.dart';
 
 @riverpod
 Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
-  // const codec = GbkCodec(allowMalformed: true);
-
   if (realPath == null) {
     return '';
   }
@@ -91,19 +90,14 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
   logger.i(signature);
 
   // 解密文件头
-  int blockSize = 16;
-  int blockCurrent = 0;
-  int blockTotal = (5216 / blockSize).round();
-  final encryptedFileHeader = bytes.getRange(tvSize + 36, tvSize + 36 + 5216);
-  List<int> decryptedFileHeader = List.empty(growable: true);
+  AES headDecryptor = AES.ofCBC(
+    base64Decode('jv1AqZ5qqzvPBC/b3JfNInhwYGV+o4xFRe86keTtCj4='),
+    base64Decode('Rm9yIEZyb2RvISVAJipNOw=='),
+    PaddingScheme.PKCS5Padding,
+  );
 
-  // 分块运行AES解密
-  while (blockTotal > blockCurrent) {
-    decryptedFileHeader.addAll(
-      decryptor.run(Uint8List.fromList(encryptedFileHeader.skip(blockCurrent * blockSize).take(blockSize).toList())).toList(),
-    );
-    blockCurrent++;
-  }
+  final encryptedFileHeader = bytes.skip(tvSize + 36).take(5216).toList();
+  Uint8List decryptedFileHeader = await headDecryptor.decrypt(Uint8List.fromList(encryptedFileHeader));
 
   // 拿到EntireString
   var entireString = String.fromCharCodes(decryptedFileHeader.skip(96).take(5014).where((a) => a > 0));
@@ -120,8 +114,7 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
   final Match? docKeyMatch = docKeyRegex.firstMatch(entireString);
   final String docId = docIdMatch?.group(1) ?? '';
   final String docKey = docKeyMatch?.group(1) ?? '';
-  logger.i('docId: $docId');
-  logger.i('docKey: $docKey');
+  logger.i('docId: $docId\ndocKey: $docKey');
 
   // 提交DocId, DocKey, SessonId拿到KeyHex
   String keyHex = '';
@@ -149,79 +142,49 @@ Future<String> doDecryption(DoDecryptionRef ref, String? realPath) async {
     logger.i('Got keyHex: $keyHex');
   }
 
+  final bodyKey = decodeKeyHex(keyHex);
+  logger.i('bodyDecryptor Key: $bodyKey');
+
   // 解密文件体
   final fileBodyStartAt = tvSize + 36 + 5216;
   final fileBodyEndAt = bytes.length - 1;
-  var encryptedFileBody = Uint8List.fromList(bytes.getRange(fileBodyStartAt, fileBodyEndAt).toList());
+  const batchSize = 1024; // 此处不是block而是batch，为了与AES自身的分块机制相区分
+  final batchTotal = ((fileBodyEndAt - fileBodyStartAt) / batchSize).ceil();
+  int batchCurrent = 0;
+  Uint8List encryptedFileBody = Uint8List.fromList(bytes.getRange(fileBodyStartAt, fileBodyEndAt).toList());
   List<int> decryptedFileBody = List.empty(growable: true);
 
   // 创建一个新的解密器，用来解密文件体
-  final bodyDecryptor = Decryptor(
-    Uint8List.fromList(decryptor.decodeKeyHex(keyHex)),
-    Uint8List.fromList([87, 198, 33, 169, 54, 135, 1, 189, 163, 116, 240, 180, 171, 67, 205, 71]),
+  AES bodyDecryptor = AES.ofCBC(
+    Uint8List.fromList(bodyKey),
+    base64Decode('V8YhqTaHAb2jdPC0q0PNRw=='),
+    PaddingScheme.PKCS5Padding,
   );
 
-  // Pad一下文件体，防止不对齐产生乱码
-  blockTotal = ((fileBodyEndAt - fileBodyStartAt) / blockSize).ceil();
-  blockCurrent = 0;
+  logger.i('File Body Starts At: $fileBodyStartAt\nFile Body Ends At: $fileBodyEndAt\nTotal Batches To Decrypt: $batchTotal');
 
-  logger.i('fileBodyStartAt: $fileBodyStartAt');
-  logger.i('fileBodyEndAt: $fileBodyEndAt');
-  logger.i('blockTotal: $blockTotal');
-
-  // 分块运行AES解密
-  while (blockTotal > blockCurrent) {
-    List<int> blockData = List.empty(growable: true);
-    blockData.insertAll(0, encryptedFileBody.skip(blockCurrent * blockSize).take(blockSize));
-
-    // 配合上面的ceil来为block填充差(padding)
-    if (blockData.length < blockSize) {
-      final padSize = blockSize - blockData.length;
-      logger.i('padded: $padSize!');
-      blockData.insertAll(blockData.length, List.filled(padSize, padSize));
-    }
-
-    decryptedFileBody.addAll(bodyDecryptor.run(Uint8List.fromList(blockData.toList())).toList());
-    blockCurrent++;
+  // 分批运行AES解密
+  while (batchTotal > batchCurrent) {
+    List<int> temp = List.empty(growable: true);
+    temp.insertAll(0, encryptedFileBody.skip(batchCurrent * batchSize).take(batchSize));
+    decryptedFileBody.addAll(await bodyDecryptor.decrypt(Uint8List.fromList(temp)));
+    batchCurrent++;
   }
-
-  // logger.i(decryptedFileBody);
-
-  // var result1 = String.fromCharCodes(decryptedFileBody.where((n) => n > 7).toList());
-  // var result2 = codec.decode(decryptedFileBody.where((n) => n > 7).toList());
-
-  // logger.i('utf8: $result1');
-  // logger.i('gbk: $result2');
 
   // 文件体写入临时目录，完成解密流程
   Directory tempDir = await getTemporaryDirectory();
   List<String> extensionList = [];
   String extensionName = "";
 
-  for (var i = realPath.length - 1; i > -1; i--) {
+  for (int i = realPath.length - 1; i > -1; i--) {
     if (realPath[i] == '.') break;
     extensionList.add(realPath[i]);
   }
 
   extensionName = extensionList.reversed.join();
-
   final filePath = '${tempDir.path}/${uuid.v1()}.$extensionName';
-
-  logger.i(realPath);
-  logger.i(filePath);
-
-  // .where((n) {
-  //   // sanitize bytes
-  //   if (n == 13 || n == 10 || n == 32 || n > 32) {
-  //     return true;
-  //   }
-  //   return false;
-  // })
-
-  // var stream = File(filePath).openWrite(encoding: gbk);
-  // stream.write(codec.decode(decryptedFileBody.toList()));
-
   await File(filePath).writeAsBytes(decryptedFileBody.toList());
+  logger.i('Input: $realPath\nOutput: $filePath');
 
   return filePath;
 }
