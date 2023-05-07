@@ -141,9 +141,12 @@ class Approvals extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           addVerticalSpace(15),
-                          Text(data[index].fileName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                          Text(
+                            '用户 ${data[index].userName} 的${data[index].actionType}申请',
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
                           addVerticalSpace(30),
-                          Text('来自企业用户 ${data[index].userName} 的${data[index].actionType}申请', style: const TextStyle(fontSize: 10)),
+                          Text(data[index].fileName, style: const TextStyle(fontSize: 10)),
                           data[index].description.isNotEmpty
                               ? Text(data[index].description, style: const TextStyle(fontSize: 10))
                               : addVerticalSpace(0),
