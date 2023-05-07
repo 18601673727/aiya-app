@@ -14,10 +14,6 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
 
-Approval _$ApprovalFromJson(Map<String, dynamic> json) {
-  return _Approval.fromJson(json);
-}
-
 /// @nodoc
 mixin _$Approval {
   String get fileName => throw _privateConstructorUsedError;
@@ -28,7 +24,6 @@ mixin _$Approval {
   int get fileId => throw _privateConstructorUsedError;
   int get userId => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $ApprovalCopyWith<Approval> get copyWith =>
       throw _privateConstructorUsedError;
@@ -173,7 +168,7 @@ class __$$_ApprovalCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$_Approval with DiagnosticableTreeMixin implements _Approval {
   const _$_Approval(
       {required this.fileName,
@@ -183,9 +178,6 @@ class _$_Approval with DiagnosticableTreeMixin implements _Approval {
       required this.createdAt,
       required this.fileId,
       required this.userId});
-
-  factory _$_Approval.fromJson(Map<String, dynamic> json) =>
-      _$$_ApprovalFromJson(json);
 
   @override
   final String fileName;
@@ -240,7 +232,6 @@ class _$_Approval with DiagnosticableTreeMixin implements _Approval {
             (identical(other.userId, userId) || other.userId == userId));
   }
 
-  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, fileName, userName, actionType,
       description, createdAt, fileId, userId);
@@ -250,13 +241,6 @@ class _$_Approval with DiagnosticableTreeMixin implements _Approval {
   @pragma('vm:prefer-inline')
   _$$_ApprovalCopyWith<_$_Approval> get copyWith =>
       __$$_ApprovalCopyWithImpl<_$_Approval>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$_ApprovalToJson(
-      this,
-    );
-  }
 }
 
 abstract class _Approval implements Approval {
@@ -268,8 +252,6 @@ abstract class _Approval implements Approval {
       required final String createdAt,
       required final int fileId,
       required final int userId}) = _$_Approval;
-
-  factory _Approval.fromJson(Map<String, dynamic> json) = _$_Approval.fromJson;
 
   @override
   String get fileName;

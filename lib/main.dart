@@ -1,19 +1,24 @@
+import 'package:uuid/uuid.dart';
+import 'package:logger/logger.dart';
 import 'package:fl_shared_link/fl_shared_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:power_file_view/power_file_view.dart';
 import 'package:aiya/providers/android_intent.dart';
 import 'package:aiya/routes.dart';
 
-var logger = Logger(
-  printer: PrettyPrinter(),
-);
+// 全局变量
+late SharedPreferences prefs;
+const uuid = Uuid();
+final logger = Logger(printer: PrettyPrinter());
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   PowerFileViewManager.initLogEnable(true, true);
   PowerFileViewManager.initEngine();
+
+  prefs = await SharedPreferences.getInstance();
 
   final container = ProviderContainer();
 

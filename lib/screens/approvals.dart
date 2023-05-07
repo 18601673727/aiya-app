@@ -1,5 +1,6 @@
 import 'package:aiya/main.dart';
-import 'package:aiya/repositories/approvals.dart';
+import 'package:aiya/providers/auth.dart';
+import 'package:aiya/repositories/approval.dart';
 import 'package:aiya/widgets/common.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -19,7 +20,9 @@ class Approvals extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(androidIntentControllerProvider);
-    final approvalsAsync = ref.watch(fetchApprovalsProvider(pageNumber: 1));
+    final accountName = ref.watch(accountNameProvider);
+    final sessionId = ref.watch(sessionIdProvider);
+    final approvalsAsync = ref.watch(fetchApprovalProvider);
 
     executeAfterBuild(() {
       // logger.i(controller.realPath);
@@ -73,9 +76,40 @@ class Approvals extends HookConsumerWidget {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(context, 'login');
+                  if (sessionId.isEmpty) {
+                    Navigator.pushNamed(context, 'login');
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        continueCallBack() async {
+                          // 登出逻辑
+                          await ref.read(sessionIdProvider.notifier).update('');
+                          await ref.read(accountNameProvider.notifier).update('');
+                          if (context.mounted) {
+                            Navigator.popAndPushNamed(context, 'login');
+                          }
+                        }
+
+                        cancelCallback() async {
+                          Navigator.of(context).pop();
+                        }
+
+                        BlurryDialog alert = BlurryDialog(
+                          '退出登录',
+                          '取消',
+                          'Aiya App v1.0',
+                          '当前用户: $accountName',
+                          continueCallBack,
+                          cancelCallback,
+                        );
+
+                        return alert;
+                      },
+                    );
+                  }
                 },
-                child: const Text('未登录'),
+                child: sessionId.isEmpty ? const Text('未登录') : Text(accountName),
               ),
             ),
           ),
@@ -107,9 +141,12 @@ class Approvals extends HookConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           addVerticalSpace(15),
-                          Text(data[index].fileName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                          Text(
+                            '用户 ${data[index].userName} 的${data[index].actionType}申请',
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
                           addVerticalSpace(30),
-                          Text('来自企业用户 ${data[index].userName} 的${data[index].actionType}申请', style: const TextStyle(fontSize: 10)),
+                          Text(data[index].fileName, style: const TextStyle(fontSize: 10)),
                           data[index].description.isNotEmpty
                               ? Text(data[index].description, style: const TextStyle(fontSize: 10))
                               : addVerticalSpace(0),
